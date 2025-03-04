@@ -1,4 +1,4 @@
-/key
+/key/my-key
 /.terraform
 /.terraform.lock.hcl
 /terraform.tfstate
