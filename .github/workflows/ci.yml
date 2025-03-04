@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v2
+
+      - name: check terraform
+        run: terraform version
+
+      - name: terraform init
+        run: terraform init
+      
+      - name: terraform plan
+        run: terraform plan
