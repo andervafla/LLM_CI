@@ -6,6 +6,14 @@ resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
 }
 
+terraform {
+   backend "s3" {
+    bucket = "tfstate23545345"
+    key    = "/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+
 resource "aws_subnet" "public_subnet_1" {
   vpc_id                  = aws_vpc.main.id
   cidr_block              = "10.0.1.0/24"
