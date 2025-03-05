@@ -9,7 +9,7 @@ resource "aws_vpc" "main" {
 terraform {
    backend "s3" {
     bucket = "tfstate23545345"
-    key    = "/terraform.tfstate"
+    key    = "terraform.tfstate"
     region = "us-east-1"
   }
 }
