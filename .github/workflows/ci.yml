@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: checkout repo
+      - name: Checkout repo
         uses: actions/checkout@v2
 
       - name: Configure AWS Credentials
@@ -24,17 +24,17 @@ jobs:
         with:
           terraform_version: "1.11.0"
 
-      - name: check terraform
+      - name: Check Terraform version
         run: terraform version
 
-      - name: terraform init
+      - name: Terraform init
         run: terraform init
       
-      - name: terraform plan
+      - name: Terraform plan
         run: terraform plan
 
       - name: Apply Terraform configuration
-        run: |
-          export TF_VAR_db_username=${{ secrets.DB_USERNAME }}
-          export TF_VAR_db_password=${{ secrets.DB_PASSWORD }}
-          terraform apply -auto-approve
+        env:
+          TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+        run: terraform apply -auto-approve
