@@ -31,7 +31,10 @@ jobs:
         run: terraform init
       
       - name: Terraform plan
-        run: terraform plan
+        env:
+          TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+        run: terraform plan -input=false
 
       - name: Apply Terraform configuration
         env:
