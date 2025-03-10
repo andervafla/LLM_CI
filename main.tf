@@ -224,6 +224,47 @@ resource "aws_instance" "bastion" {
   }
 }
 
+resource "aws_security_group" "monitoring_sg" {
+  vpc_id = aws_vpc.main.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = [var.my_ip]  
+  }
+
+  ingress {
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "Monitoring Security Group"
+  }
+}
+
+resource "aws_instance" "monitoring_instance" {
+  ami                    = var.ami_id
+  instance_type          = "t2.micro"
+  subnet_id              = aws_subnet.public["public_subnet_2"].id 
+  vpc_security_group_ids = [aws_security_group.monitoring_sg.id]
+  key_name               = var.key_name
+
+  tags = {
+    Name = "Monitoring Instance"
+  }
+}
+
 
 resource "aws_lb" "main" {
   name               = "main-alb"

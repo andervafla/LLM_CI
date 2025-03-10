@@ -14,11 +14,6 @@ variable "my_ip" {
   default = "0.0.0.0/0"
 }
 
-variable "db_name" {
-  type = string
-  description = "Database name"
-}
-
 variable "db_username" {
   type = string
   description = "Database username"
@@ -29,3 +24,5 @@ variable "db_password" {
   description = "Database password"
   sensitive = true
 }
+
+
