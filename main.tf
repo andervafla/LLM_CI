@@ -182,6 +182,13 @@ resource "aws_security_group" "private_sg" {
   }
 
   ingress {
+  from_port   = 9100
+  to_port     = 9100
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]  
+}
+
+  ingress {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
@@ -226,6 +233,13 @@ resource "aws_instance" "bastion" {
 
 resource "aws_security_group" "monitoring_sg" {
   vpc_id = aws_vpc.main.id
+
+  ingress {
+  from_port   = 9100
+  to_port     = 9100
+  protocol    = "tcp"
+  cidr_blocks = ["0.0.0.0/0"]  
+}
 
   ingress {
     from_port   = 22
