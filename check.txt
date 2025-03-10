@@ -4,9 +4,6 @@ provider "aws" {
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "Main VPC"
-  }
 }
 
 terraform {
@@ -58,9 +55,6 @@ resource "aws_subnet" "public" {
   cidr_block               = each.value.cidr_block
   availability_zone        = each.value.availability_zone
   map_public_ip_on_launch  = true
-  tags = {
-    Name = "Public Subnet ${each.key}"
-  }
 }
 
 resource "aws_subnet" "private" {
@@ -68,9 +62,6 @@ resource "aws_subnet" "private" {
   vpc_id           = aws_vpc.main.id
   cidr_block       = each.value.cidr_block
   availability_zone = each.value.availability_zone
-  tags = {
-    Name = "Private Subnet ${each.key}"
-  }
 }
 
 resource "aws_subnet" "rds" {
@@ -78,9 +69,6 @@ resource "aws_subnet" "rds" {
   vpc_id           = aws_vpc.main.id
   cidr_block       = each.value.cidr_block
   availability_zone = each.value.availability_zone
-  tags = {
-    Name = "RDS Subnet ${each.key}"
-  }
 }
 
 resource "aws_route_table_association" "public" {
@@ -129,24 +117,15 @@ resource "aws_route_table" "private_rt" {
 
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
-    tags = {
-    Name = "Main IGW"
-  }
 }
 
 resource "aws_eip" "nat" {
   domain = "vpc"
-    tags = {
-    Name = "NAT EIP"
-  }
 }
 
 resource "aws_nat_gateway" "main" {
   allocation_id = aws_eip.nat.id
   subnet_id     = aws_subnet.public["public_subnet_1"].id
-    tags = {
-    Name = "Main NAT Gateway"
-  }
 }
 
 resource "aws_security_group" "bastion_sg" {
@@ -164,10 +143,6 @@ resource "aws_security_group" "bastion_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "Bastion Security Group"
   }
 }
 
@@ -201,10 +176,6 @@ resource "aws_security_group" "private_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "Private Security Group"
-  }
 }
 
 resource "aws_key_pair" "my_key" {
@@ -233,9 +204,6 @@ resource "aws_lb" "main" {
   subnets            = values(aws_subnet.public)[*].id
   enable_deletion_protection = false
 
-  tags = {
-    Name = "Application Load Balancer"
-  }
 }
 
 resource "aws_security_group" "alb_sg" {
@@ -260,10 +228,6 @@ resource "aws_security_group" "alb_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "ALB Security Group"
   }
 }
 
@@ -297,9 +261,6 @@ resource "aws_lb_listener" "http" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.tg.arn
   }
-    tags = {
-    Name = "HTTP Listener"
-  }
 }
 
 resource "aws_launch_template" "launch_template" {
@@ -324,9 +285,6 @@ resource "aws_launch_template" "launch_template" {
 
   lifecycle {
     create_before_destroy = true
-  }
-   tags = {
-    Name = "Launch Template"
   }
 }
 
@@ -366,10 +324,6 @@ resource "aws_security_group" "rds_sg" {
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "RDS Security Group"
-  }
 }
 
 resource "aws_db_instance" "rds_instance" {
@@ -378,23 +332,17 @@ resource "aws_db_instance" "rds_instance" {
   engine_version = "15"
   instance_class = "db.t3.micro"
   db_name = "mydatabase"
-  username = var.db_username
-  password = var.db_password
+  username = "dbuser"
+  password = "password"
   parameter_group_name = "default.postgres15"
   skip_final_snapshot = true
   publicly_accessible = false
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
   db_subnet_group_name  = aws_db_subnet_group.rds_subnet_group.name
-   tags = {
-    Name = "RDS Instance"
-  }
 }
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "rds-subnet-group"
   subnet_ids = values(aws_subnet.rds)[*].id
-  tags = {
-    Name = "RDS Subnet Group"
-  }
 }
 

@@ -4,9 +4,6 @@ provider "aws" {
 
 resource "aws_vpc" "main" {
   cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "Main VPC"
-  }
 }
 
 terraform {
@@ -17,88 +14,46 @@ terraform {
   }
 }
 
-locals {
-  public_subnets = {
-    public_subnet_1 = {
-      cidr_block        = "10.0.1.0/24"
-      availability_zone = "us-east-1a"
-    }
-    public_subnet_2 = {
-      cidr_block        = "10.0.2.0/24"
-      availability_zone = "us-east-1b"
-    }
-  }
-
-  private_subnets = {
-    private_subnet_1 = {
-      cidr_block        = "10.0.3.0/24"
-      availability_zone = "us-east-1a"
-    }
-    private_subnet_2 = {
-      cidr_block        = "10.0.4.0/24"
-      availability_zone = "us-east-1b"
-    }
-  }
-
-  rds_subnets = {
-    private_subnet_rds_1 = {
-      cidr_block        = "10.0.5.0/24"
-      availability_zone = "us-east-1a"
-    }
-    private_subnet_rds_2 = {
-      cidr_block        = "10.0.6.0/24"
-      availability_zone = "us-east-1b"
-    }
-  }
+resource "aws_subnet" "public_subnet_1" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "us-east-1a"
 }
 
-resource "aws_subnet" "public" {
-  for_each                = local.public_subnets
-  vpc_id                   = aws_vpc.main.id
-  cidr_block               = each.value.cidr_block
-  availability_zone        = each.value.availability_zone
-  map_public_ip_on_launch  = true
-  tags = {
-    Name = "Public Subnet ${each.key}"
-  }
+resource "aws_subnet" "public_subnet_2" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.2.0/24"
+  map_public_ip_on_launch = true
+  availability_zone       = "us-east-1b"
 }
 
-resource "aws_subnet" "private" {
-  for_each         = local.private_subnets
-  vpc_id           = aws_vpc.main.id
-  cidr_block       = each.value.cidr_block
-  availability_zone = each.value.availability_zone
-  tags = {
-    Name = "Private Subnet ${each.key}"
-  }
+resource "aws_subnet" "private_subnet" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.3.0/24"
+  availability_zone = "us-east-1a"
 }
 
-resource "aws_subnet" "rds" {
-  for_each         = local.rds_subnets
-  vpc_id           = aws_vpc.main.id
-  cidr_block       = each.value.cidr_block
-  availability_zone = each.value.availability_zone
-  tags = {
-    Name = "RDS Subnet ${each.key}"
-  }
+resource "aws_subnet" "private_subnet_2" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.4.0/24"
+  availability_zone = "us-east-1b"
 }
 
-resource "aws_route_table_association" "public" {
-  for_each       = aws_subnet.public
-  subnet_id      = each.value.id
-  route_table_id = aws_route_table.public_rt.id
+resource "aws_subnet" "private_subnet_rds" {
+  vpc_id = aws_vpc.main.id
+  cidr_block = "10.0.5.0/24"
+  availability_zone = "us-east-1a"
 }
 
-resource "aws_route_table_association" "private" {
-  for_each       = aws_subnet.private
-  subnet_id      = each.value.id
-  route_table_id = aws_route_table.private_rt.id
+resource "aws_subnet" "private_subnet_rds_2" {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = "10.0.6.0/24"
+  availability_zone = "us-east-1b"
 }
 
-resource "aws_route_table_association" "private_rds" {
-  for_each       = aws_subnet.rds
-  subnet_id      = each.value.id
-  route_table_id = aws_route_table.private_rt.id
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main.id
 }
 
 resource "aws_route_table" "public_rt" {
@@ -106,11 +61,30 @@ resource "aws_route_table" "public_rt" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
+    gateway_id = aws_internet_gateway.gw.id
   }
+}
+
+resource "aws_route_table_association" "public" {
+  subnet_id      = aws_subnet.public_subnet_1.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_route_table_association" "public_2" {
+  subnet_id      = aws_subnet.public_subnet_2.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+resource "aws_eip" "nat" {
+  domain = "vpc"
+}
+
+resource "aws_nat_gateway" "nat" {
+  allocation_id = aws_eip.nat.id
+  subnet_id     = aws_subnet.public_subnet_1.id
 
   tags = {
-    Name = "Public Route Table"
+    Name = "NAT Gateway"
   }
 }
 
@@ -119,34 +93,23 @@ resource "aws_route_table" "private_rt" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
-  }
-
-  tags = {
-    Name = "Private Route Table"
+    nat_gateway_id = aws_nat_gateway.nat.id
   }
 }
 
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-    tags = {
-    Name = "Main IGW"
-  }
+resource "aws_route_table_association" "private_1" {
+  subnet_id      = aws_subnet.private_subnet.id
+  route_table_id = aws_route_table.private_rt.id
 }
 
-resource "aws_eip" "nat" {
-  domain = "vpc"
-    tags = {
-    Name = "NAT EIP"
-  }
+resource "aws_route_table_association" "private_2" {
+  subnet_id      = aws_subnet.private_subnet_2.id
+  route_table_id = aws_route_table.private_rt.id
 }
 
-resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public["public_subnet_1"].id
-    tags = {
-    Name = "Main NAT Gateway"
-  }
+resource "aws_route_table_association" "private_rds" {
+  subnet_id = aws_subnet.private_subnet_rds.id
+  route_table_id = aws_route_table.private_rt.id
 }
 
 resource "aws_security_group" "bastion_sg" {
@@ -164,10 +127,6 @@ resource "aws_security_group" "bastion_sg" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "Bastion Security Group"
   }
 }
 
@@ -201,10 +160,6 @@ resource "aws_security_group" "private_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "Private Security Group"
-  }
 }
 
 resource "aws_key_pair" "my_key" {
@@ -215,7 +170,7 @@ resource "aws_key_pair" "my_key" {
 resource "aws_instance" "bastion" {
   ami                    = var.ami_id
   instance_type          = "t2.micro"
-  subnet_id              = aws_subnet.public["public_subnet_1"].id
+  subnet_id              = aws_subnet.public_subnet_1.id
   vpc_security_group_ids = [aws_security_group.bastion_sg.id]
   key_name               = var.key_name
 
@@ -230,12 +185,9 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = values(aws_subnet.public)[*].id
+  subnets            = [aws_subnet.public_subnet_1.id, aws_subnet.public_subnet_2.id]
   enable_deletion_protection = false
 
-  tags = {
-    Name = "Application Load Balancer"
-  }
 }
 
 resource "aws_security_group" "alb_sg" {
@@ -261,10 +213,6 @@ resource "aws_security_group" "alb_sg" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "ALB Security Group"
-  }
 }
 
 
@@ -286,6 +234,7 @@ resource "aws_lb_target_group" "tg" {
   type            = "lb_cookie"
   cookie_duration = 300
 }
+
 }
 
 resource "aws_lb_listener" "http" {
@@ -296,9 +245,6 @@ resource "aws_lb_listener" "http" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.tg.arn
-  }
-    tags = {
-    Name = "HTTP Listener"
   }
 }
 
@@ -325,16 +271,13 @@ resource "aws_launch_template" "launch_template" {
   lifecycle {
     create_before_destroy = true
   }
-   tags = {
-    Name = "Launch Template"
-  }
 }
 
 resource "aws_autoscaling_group" "asg" {
   desired_capacity     = 2
   max_size             = 3
   min_size             = 1
-  vpc_zone_identifier = values(aws_subnet.private)[*].id
+  vpc_zone_identifier  = [aws_subnet.private_subnet.id, aws_subnet.private_subnet_2.id]
 
   launch_template {
     name    = aws_launch_template.launch_template.name
@@ -366,10 +309,6 @@ resource "aws_security_group" "rds_sg" {
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
-
-  tags = {
-    Name = "RDS Security Group"
-  }
 }
 
 resource "aws_db_instance" "rds_instance" {
@@ -378,23 +317,17 @@ resource "aws_db_instance" "rds_instance" {
   engine_version = "15"
   instance_class = "db.t3.micro"
   db_name = "mydatabase"
-  username = var.db_username
-  password = var.db_password
+  username = "dbuser"
+  password = "password"
   parameter_group_name = "default.postgres15"
   skip_final_snapshot = true
   publicly_accessible = false
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
   db_subnet_group_name  = aws_db_subnet_group.rds_subnet_group.name
-   tags = {
-    Name = "RDS Instance"
-  }
 }
 
 resource "aws_db_subnet_group" "rds_subnet_group" {
   name       = "rds-subnet-group"
-  subnet_ids = values(aws_subnet.rds)[*].id
-  tags = {
-    Name = "RDS Subnet Group"
-  }
+  subnet_ids = [aws_subnet.private_subnet_rds.id, aws_subnet.private_subnet_rds_2.id]
 }
 
