@@ -235,12 +235,19 @@ resource "aws_security_group" "monitoring_sg" {
   vpc_id = aws_vpc.main.id
 
   ingress {
-  from_port   = 9100
-  to_port     = 9100
-  protocol    = "tcp"
-  cidr_blocks = ["0.0.0.0/0"]  
-}
+    from_port   = 9100
+    to_port     = 9100
+    protocol    = "tcp"
+    security_groups = [aws_security_group.private_sg.id] # Тільки ASG EC2
+  }
 
+  # Вихідний трафік з Monitoring-сервера на 9100 для Grafana Agent
+  egress {
+    from_port   = 9100
+    to_port     = 9100
+    protocol    = "tcp"
+    security_groups = [aws_security_group.private_sg.id] # Вихід Prometheus до ASG EC2
+  }
   ingress {
     from_port   = 22
     to_port     = 22
