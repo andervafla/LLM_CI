@@ -17,7 +17,7 @@ sudo cp -r /usr/local/prometheus/console_libraries /etc/prometheus
 sudo nano /etc/prometheus/prometheus.yml
 
 global:
-  scrape_interval: 15s  # Як часто збирати метрики
+  scrape_interval: 15s  
 
 scrape_configs:
   - job_name: 'prometheus'
@@ -26,7 +26,7 @@ scrape_configs:
 
   - job_name: 'grafana-agent'
     static_configs:
-      - targets: ['asg-instance-1:9100', 'asg-instance-2:9100']  # Замініть на реальні IP ASG інстансів
+      - targets: ['asg-instance-1:9100', 'asg-instance-2:9100'] 
 
 
 sudo chown -R prometheus:prometheus /etc/prometheus /var/lib/prometheus

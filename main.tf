@@ -182,6 +182,13 @@ resource "aws_security_group" "private_sg" {
   }
 
   ingress {
+    from_port   = 12345
+    to_port     = 12345
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  
+  }
+
+  ingress {
   from_port   = 9100
   to_port     = 9100
   protocol    = "tcp"
@@ -241,6 +248,13 @@ resource "aws_security_group" "monitoring_sg" {
     security_groups = [aws_security_group.private_sg.id] # Тільки ASG EC2
   }
 
+  ingress {
+    from_port   = 12345
+    to_port     = 12345
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  
+  }
+
   # Вихідний трафік з Monitoring-сервера на 9100 для Grafana Agent
   egress {
     from_port   = 9100
@@ -253,6 +267,13 @@ resource "aws_security_group" "monitoring_sg" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = [var.my_ip]  
+  }
+
+  ingress {
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  
   }
 
   ingress {
