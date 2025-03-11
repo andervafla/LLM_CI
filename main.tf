@@ -414,8 +414,8 @@ resource "aws_launch_template" "launch_template" {
 }
 
 resource "aws_autoscaling_group" "asg" {
-  desired_capacity     = 2
-  max_size             = 3
+  desired_capacity     = 1
+  max_size             = 1
   min_size             = 1
   vpc_zone_identifier = values(aws_subnet.private)[*].id
 
