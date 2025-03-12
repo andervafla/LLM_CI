@@ -150,3 +150,25 @@ prometheus.scrape "default" {
   // prometheus.relabel).
   ]
 }
+
+працює 
+
+logging {
+  level = "info"
+}
+
+prometheus.exporter.unix "default" {
+  include_exporter_metrics = true
+  enable_collectors = ["systemd"]
+}
+
+prometheus.scrape "default" {
+  targets = prometheus.exporter.unix.default.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://18.206.215.29:9090/api/v1/write"
+  }
+}
