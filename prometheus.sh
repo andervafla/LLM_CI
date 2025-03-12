@@ -102,7 +102,7 @@ prometheus.remote_write "default" {
 
  2 вар 
 
- 
+
 logging {
   level = "info"
 }
@@ -120,4 +120,33 @@ prometheus.remote_write "default" {
   endpoint {
     url = "http://3.81.60.209:9090/api/v1/write"
   }
+}
+
+
+// Sample config for Grafana Agent Flow.
+//
+// For a full configuration reference, see https://grafana.com/docs/agent/latest/flow/
+logging {
+  level = "warn"
+}
+
+prometheus.exporter.unix "default" {
+  include_exporter_metrics = true
+  disable_collectors       = ["mdadm"]
+}
+
+prometheus.scrape "default" {
+  targets = concat(
+   prometheus.exporter.unix.default.targets,
+   [{
+    // Self-collect metrics
+    job         = "agent",
+    __address__ = "127.0.0.1:12345",
+   }],
+  )
+
+  forward_to = [
+  // TODO: components to forward metrics to (like prometheus.remote_write or
+  // prometheus.relabel).
+  ]
 }
