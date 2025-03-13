@@ -47,8 +47,9 @@ Type=simple
 ExecStart=/usr/local/bin/prometheus \
   --config.file=/etc/prometheus/prometheus.yml \
   --storage.tsdb.path=/var/lib/prometheus/ \
-  --web.listen-address=0.0.0.0:9090 \
-  --web.enable-lifecycle
+  --web.listen-address=:9090 \
+  --web.enable-remote-write-receiver
+
 
 Restart=always
 
@@ -172,3 +173,23 @@ prometheus.remote_write "default" {
     url = "http://18.206.215.29:9090/api/v1/write"
   }
 }
+
+[Unit]
+Description=A high performance web server and a reverse proxy server
+Documentation=man:nginx(8)
+After=network-online.target remote-fs.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+Type=forking
+PIDFile=/run/nginx.pid
+ExecStartPre=/usr/sbin/nginx -t -q -g 'daemon on; master_process on;'
+ExecStart=/usr/sbin/nginx -g 'daemon on; master_process on;'
+ExecReload=/usr/sbin/nginx -g 'daemon on; master_process on;' -s reload
+ExecStop=-/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx.pid
+TimeoutStopSec=5
+KillMode=mixed
+
+
+[Install]
+WantedBy=multi-user.target
