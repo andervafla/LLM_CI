@@ -296,11 +296,13 @@ resource "aws_security_group" "monitoring_sg" {
 }
 
 resource "aws_instance" "monitoring_instance" {
-  ami                    = var.ami_id
+  ami                    = var.ami_monitoring_id
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public["public_subnet_2"].id 
   vpc_security_group_ids = [aws_security_group.monitoring_sg.id]
   key_name               = var.key_name
+
+  iam_instance_profile = aws_iam_instance_profile.monitoring_profile.name
 
   tags = {
     Name = "Monitoring Instance"

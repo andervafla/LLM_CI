@@ -6,6 +6,10 @@ variable "ami_id" {
   default = "ami-04b4f1a9cf54c11d0"
 }
 
+variable "ami_monitoring_id" {
+  default = "ami-033a5a4bbfc0add4b"
+}
+
 variable "key_name" {
   default = "my-key"
 }

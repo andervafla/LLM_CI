@@ -24,9 +24,6 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
 
-  - job_name: 'grafana-agent'
-    static_configs:
-      - targets: ['asg-instance-1:9100', 'asg-instance-2:9100'] 
 
 
 sudo chown -R prometheus:prometheus /etc/prometheus /var/lib/prometheus
@@ -193,3 +190,28 @@ KillMode=mixed
 
 [Install]
 WantedBy=multi-user.target
+
+
+node_systemd_unit_state{name="nginx.service"}
+
+logging {
+  level = "info"
+}
+
+prometheus.exporter.unix "default" {
+  include_exporter_metrics = true
+  enable_collectors = ["systemd"]  // Включаємо колектор systemd для збору метрик сервісів
+}
+
+prometheus.scrape "default" {
+  scrape_interval = "15s"
+  scrape_timeout  = "10s"
+  targets = prometheus.exporter.unix.default.targets
+  forward_to = [prometheus.remote_write.default.receiver]
+}
+
+prometheus.remote_write "default" {
+  endpoint {
+    url = "http://18.234.29.54:9090/api/v1/write"
+  }
+}
