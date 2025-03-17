@@ -1,3 +1,7 @@
+resource "aws_sns_topic" "alerts_topic" {
+  name = "alerts-topic"
+}
+
 
 resource "aws_cloudwatch_metric_alarm" "db_high_storage" {
   alarm_name          = "[llm]-[test]-[db]-[high]-[storage]"
@@ -12,6 +16,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_storage" {
   dimensions = {
     DBInstanceIdentifier = aws_db_instance.rds_instance.id
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
@@ -27,6 +32,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
   dimensions = {
     DBInstanceIdentifier = aws_db_instance.rds_instance.id
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "db_high_memory" {
@@ -42,6 +48,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_memory" {
   dimensions = {
     DBInstanceIdentifier = aws_db_instance.rds_instance.id
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "ec2_low_cpu" {
@@ -57,6 +64,7 @@ resource "aws_cloudwatch_metric_alarm" "ec2_low_cpu" {
   dimensions = {
     InstanceId = aws_instance.bastion.id  
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "ec2_high_cpu" {
@@ -72,6 +80,7 @@ resource "aws_cloudwatch_metric_alarm" "ec2_high_cpu" {
   dimensions = {
     InstanceId = aws_instance.bastion.id
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "ec2_low_memory" {
@@ -87,6 +96,7 @@ resource "aws_cloudwatch_metric_alarm" "ec2_low_memory" {
   dimensions = {
     InstanceId = aws_instance.bastion.id
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "ec2_high_memory" {
@@ -102,6 +112,7 @@ resource "aws_cloudwatch_metric_alarm" "ec2_high_memory" {
   dimensions = {
     InstanceId = aws_instance.bastion.id
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "ec2_low_disk_space" {
@@ -118,6 +129,7 @@ resource "aws_cloudwatch_metric_alarm" "ec2_low_disk_space" {
     InstanceId = aws_instance.bastion.id
     Filesystem = "/"             
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 
@@ -135,6 +147,7 @@ resource "aws_cloudwatch_metric_alarm" "ec2_high_disk_space" {
     InstanceId = aws_instance.bastion.id
     Filesystem = "/"
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "elb_high_host_count" {
@@ -150,6 +163,7 @@ resource "aws_cloudwatch_metric_alarm" "elb_high_host_count" {
   dimensions = {
     LoadBalancerName = aws_lb.main.name
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "elb_medium_4xx_errors" {
@@ -165,6 +179,7 @@ resource "aws_cloudwatch_metric_alarm" "elb_medium_4xx_errors" {
   dimensions = {
     LoadBalancerName = aws_lb.main.name
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "elb_medium_5xx_errors" {
@@ -180,4 +195,5 @@ resource "aws_cloudwatch_metric_alarm" "elb_medium_5xx_errors" {
   dimensions = {
     LoadBalancerName = aws_lb.main.name
   }
+  alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
