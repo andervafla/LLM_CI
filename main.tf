@@ -387,6 +387,54 @@ resource "aws_lb_listener" "http" {
   }
 }
 
+resource "aws_lb_target_group" "monitoring_tg" {
+  name     = "monitoring-tg"
+  port     = 9100  
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.main.id
+
+  health_check {
+    path                = "/health"  
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+  }
+
+  stickiness {
+    type            = "lb_cookie"
+    cookie_duration = 300
+  }
+}
+
+resource "aws_lb_target_group_attachment" "monitoring_tg_attachment" {
+  target_group_arn = aws_lb_target_group.monitoring_tg.arn
+  target_id        = aws_instance.monitoring_instance.id 
+  port             = 9100  
+}
+
+
+resource "aws_lb_listener_rule" "monitoring_path_rule" {
+  listener_arn = aws_lb_listener.http.arn  
+  priority     = 1  
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.monitoring_tg.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/monitoring*"]  
+    }
+  }
+
+  tags = {
+    Name = "Monitoring Path Rule"
+  }
+}
+
+
 resource "aws_launch_template" "launch_template" {
   name          = "launch-template"
   image_id      = var.ami_id
