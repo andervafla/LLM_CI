@@ -245,9 +245,8 @@ resource "aws_security_group" "monitoring_sg" {
     from_port   = 9100
     to_port     = 9100
     protocol    = "tcp"
-    security_groups = [aws_security_group.private_sg.id] # Тільки ASG EC2
+    security_groups = [aws_security_group.private_sg.id]
   }
-
   ingress {
     from_port   = 12345
     to_port     = 12345
@@ -255,12 +254,11 @@ resource "aws_security_group" "monitoring_sg" {
     cidr_blocks = ["0.0.0.0/0"]  
   }
 
-  # Вихідний трафік з Monitoring-сервера на 9100 для Grafana Agent
   egress {
     from_port   = 9100
     to_port     = 9100
     protocol    = "tcp"
-    security_groups = [aws_security_group.private_sg.id] # Вихід Prometheus до ASG EC2
+    security_groups = [aws_security_group.private_sg.id] 
   }
   ingress {
     from_port   = 22
@@ -309,7 +307,6 @@ resource "aws_instance" "monitoring_instance" {
   }
 }
 
-
 resource "aws_lb" "main" {
   name               = "main-alb"
   internal           = false
@@ -355,7 +352,7 @@ resource "aws_security_group" "alb_sg" {
 
 resource "aws_lb_target_group" "tg" {
   name     = "main-tg"
-  port     = 3000
+  port     = 80
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
 
@@ -375,7 +372,7 @@ resource "aws_lb_target_group" "tg" {
 
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
-  port              = "3000"
+  port              = "80"
   protocol          = "HTTP"
 
   default_action {
@@ -389,7 +386,7 @@ resource "aws_lb_listener" "http" {
 
 resource "aws_lb_target_group" "monitoring_tg" {
   name     = "monitoring-tg"
-  port     = 9100  
+  port     = 3000 
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
 
@@ -410,7 +407,7 @@ resource "aws_lb_target_group" "monitoring_tg" {
 resource "aws_lb_target_group_attachment" "monitoring_tg_attachment" {
   target_group_arn = aws_lb_target_group.monitoring_tg.arn
   target_id        = aws_instance.monitoring_instance.id 
-  port             = 9100  
+  port             = 3000  
 }
 
 
