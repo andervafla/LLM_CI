@@ -2,6 +2,13 @@ resource "aws_sns_topic" "alerts_topic" {
   name = "alerts-topic"
 }
 
+resource "aws_sns_topic_subscription" "email_subscription" {
+  topic_arn = aws_sns_topic.alerts_topic.arn
+  protocol  = "email"
+  endpoint  = "andervafla@gmail.com"  # Ваш email
+}
+
+
 resource "aws_cloudwatch_metric_alarm" "elb_high_host_count" {
   alarm_name          = "[llm]-[test]-[elb]-[high]-[host-count]"
   alarm_description   = "Алерт, коли кількість здорових хостів у ELB перевищує поріг"
