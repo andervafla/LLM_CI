@@ -19,6 +19,7 @@ resource "aws_ssm_document" "grafana_setup" {
           "sudo apt-get update",
           "sudo apt-get install -y grafana-agent-flow",
           "sudo tee /etc/grafana-agent-flow.river > /dev/null <<EOF",
+
           "logging {",
           "  level = \"info\"",
           "}",
