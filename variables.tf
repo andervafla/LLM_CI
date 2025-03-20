@@ -6,6 +6,9 @@ variable "ami_id" {
   default = "ami-04b4f1a9cf54c11d0"
 }
 
+variable "ami_asg_id" {
+  default = "ami-00db0ffce3248e509"
+}
 
 variable "ami_monitoring_id" {
   default = "ami-033a5a4bbfc0add4b"

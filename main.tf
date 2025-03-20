@@ -350,7 +350,6 @@ resource "aws_security_group" "alb_sg" {
   }
 }
 
-# Target Group для основного сервісу (tg) – наприклад, працює на порту 8080
 resource "aws_lb_target_group" "tg" {
   name     = "main-tg"
   port     = 80
@@ -371,7 +370,6 @@ resource "aws_lb_target_group" "tg" {
   }
 }
 
-# Target Group для моніторингу (monit_tg) – працює на порту 3000
 resource "aws_lb_target_group" "monit_tg" {
   name     = "monit-tg"
   port     = 3000
@@ -392,11 +390,6 @@ resource "aws_lb_target_group" "monit_tg" {
   }
 }
 
-###############################
-# ALB Listeners
-###############################
-
-# Listener для основного сервісу на порту 80
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
@@ -412,7 +405,6 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# Listener для моніторингу на порту 3000
 resource "aws_lb_listener" "monitoring" {
   load_balancer_arn = aws_lb.main.arn
   port              = "3000"
@@ -428,10 +420,6 @@ resource "aws_lb_listener" "monitoring" {
   }
 }
 
-###############################
-# Прикріплення моніторингової інстанції до Target Group для моніторингу
-###############################
-
 resource "aws_lb_target_group_attachment" "monitoring_tg_attachment" {
   target_group_arn = aws_lb_target_group.monit_tg.arn
   target_id        = aws_instance.monitoring_instance.id
@@ -441,9 +429,13 @@ resource "aws_lb_target_group_attachment" "monitoring_tg_attachment" {
 
 resource "aws_launch_template" "launch_template" {
   name          = "launch-template"
-  image_id      = var.ami_id
+  image_id      = var.ami_asg_id
   instance_type = "t3.xlarge"
   key_name      = var.key_name
+
+ iam_instance_profile {
+    name = aws_iam_instance_profile.llm_profile.name
+  }
 
   network_interfaces {
     security_groups = [aws_security_group.private_sg.id] 
