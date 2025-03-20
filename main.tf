@@ -321,20 +321,6 @@ resource "aws_lb" "main" {
 }
 
 # Security Group для ALB
-resource "aws_lb" "main" {
-  name               = "main-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb_sg.id]
-  subnets            = values(aws_subnet.public)[*].id
-  enable_deletion_protection = false
-
-  tags = {
-    Name = "Application Load Balancer"
-  }
-}
-
-# Security Group для ALB
 resource "aws_security_group" "alb_sg" {
   vpc_id = aws_vpc.main.id
 
