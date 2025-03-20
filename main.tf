@@ -382,6 +382,7 @@ resource "aws_lb_listener" "http" {
     target_group_arn = aws_lb_target_group.tg.arn  # Перенаправляє на основну Target Group
   }
 
+
   tags = {
     Name = "HTTP Listener"
   }
@@ -427,7 +428,7 @@ resource "aws_lb_listener_rule" "monitoring_path_rule" {
 
   condition {
     path_pattern {
-      values = ["/monitoring*"]  # Якщо шлях /monitoring, перенаправляє на Target Group для моніторингу
+      values = ["/monitoring", "/monitoring/*"]  # Якщо шлях /monitoring, перенаправляє на Target Group для моніторингу
     }
   }
 
