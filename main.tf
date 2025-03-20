@@ -351,14 +351,34 @@ resource "aws_security_group" "alb_sg" {
 }
 
 # Основна Target Group (на порті 80)
+# Listener для основного сервісу на порту 80
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+   default_action {
+    type             = "fixed-response"
+    fixed_response {
+      status_code  = "404"
+      message_body = "Not Found"
+      content_type = "text/plain"
+    }
+  }
+
+  tags = {
+    Name = "HTTP Listener"
+  }
+}
+
+# Target Group для /ai (наприклад, на порту 8080)
 resource "aws_lb_target_group" "tg" {
   name     = "main-tg"
-  port     = 80  # Основний порт
+  port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
 
   health_check {
-    path                = "/"
+    path                = "/health"  # Використовуємо /health для перевірки здоров'я
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
@@ -371,26 +391,9 @@ resource "aws_lb_target_group" "tg" {
   }
 }
 
-# Listener для основного сервісу на порту 80
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.tg.arn  # Перенаправляє на основну Target Group
-  }
-
-
-  tags = {
-    Name = "HTTP Listener"
-  }
-}
-
-# Target Group для моніторингу (на порті 3000)
-resource "aws_lb_target_group" "monitoring_tg" {
-  name     = "monitoring-tg"
+# Target Group для /monit (наприклад, на порту 3000)
+resource "aws_lb_target_group" "monit_tg" {
+  name     = "monit-tg"
   port     = 3000
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
@@ -409,33 +412,54 @@ resource "aws_lb_target_group" "monitoring_tg" {
   }
 }
 
-# Прив'язка моніторингової інстанції до Target Group
-resource "aws_lb_target_group_attachment" "monitoring_tg_attachment" {
-  target_group_arn = aws_lb_target_group.monitoring_tg.arn
-  target_id        = aws_instance.monitoring_instance.id 
-  port             = 3000  
-}
-
-# Правило маршрутизації для шляху /monitoring
-resource "aws_lb_listener_rule" "monitoring_path_rule" {
+# Правило маршрутизації для шляху /ai
+resource "aws_lb_listener_rule" "ai_path_rule" {
   listener_arn = aws_lb_listener.http.arn  
   priority     = 1  # Пріоритет для цього правила
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.monitoring_tg.arn  # Перенаправляє запити на /monitoring
+    target_group_arn = aws_lb_target_group.tg.arn  # Перенаправляє запити на /ai до Target Group для AI
   }
 
   condition {
     path_pattern {
-      values = ["/monitoring", "/monitoring/*"]  # Якщо шлях /monitoring, перенаправляє на Target Group для моніторингу
+      values = ["/ai", "/ai/*"]  # Якщо шлях /ai або підшляхи /ai/*, перенаправляє на Target Group для AI
     }
   }
 
   tags = {
-    Name = "Monitoring Path Rule"
+    Name = "AI Path Rule"
   }
 }
+
+resource "aws_lb_target_group_attachment" "monitoring_tg_attachment" {
+  target_group_arn = aws_lb_target_group.monit_tg.arn  # Прикріплюємо до Target Group для моніторингу
+  target_id        = aws_instance.monitoring_instance.id  # ID моніторингової інстанції
+  port             = 3000  # Порт моніторингової інстанції
+}
+
+# Правило маршрутизації для шляху /monit
+resource "aws_lb_listener_rule" "monit_path_rule" {
+  listener_arn = aws_lb_listener.http.arn  
+  priority     = 2  # Пріоритет для цього правила
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.monit_tg.arn  # Перенаправляє запити на /monit до Target Group для моніторингу
+  }
+
+  condition {
+    path_pattern {
+      values = ["/monit", "/monit/*"]  # Якщо шлях /monit або підшляхи /monit/*, перенаправляє на Target Group для моніторингу
+    }
+  }
+
+  tags = {
+    Name = "Monit Path Rule"
+  }
+}
+
 
 
 resource "aws_launch_template" "launch_template" {
