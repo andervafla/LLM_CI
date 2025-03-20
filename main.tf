@@ -320,6 +320,7 @@ resource "aws_lb" "main" {
   }
 }
 
+# Security Group для ALB
 resource "aws_security_group" "alb_sg" {
   vpc_id = aws_vpc.main.id
 
@@ -330,7 +331,7 @@ resource "aws_security_group" "alb_sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-   ingress {
+  ingress {
     from_port   = 3000
     to_port     = 3000
     protocol    = "tcp"
@@ -349,10 +350,10 @@ resource "aws_security_group" "alb_sg" {
   }
 }
 
-
+# Основна Target Group (на порті 80)
 resource "aws_lb_target_group" "tg" {
   name     = "main-tg"
-  port     = 3000
+  port     = 80  # Основний порт
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
 
@@ -365,33 +366,36 @@ resource "aws_lb_target_group" "tg" {
   }
 
   stickiness {
-  type            = "lb_cookie"
-  cookie_duration = 300
-}
+    type            = "lb_cookie"
+    cookie_duration = 300
+  }
 }
 
+# Listener для основного сервісу на порту 80
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
-  port              = "3000"
+  port              = "80"
   protocol          = "HTTP"
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.tg.arn
+    target_group_arn = aws_lb_target_group.tg.arn  # Перенаправляє на основну Target Group
   }
-    tags = {
+
+  tags = {
     Name = "HTTP Listener"
   }
 }
 
+# Target Group для моніторингу (на порті 3000)
 resource "aws_lb_target_group" "monitoring_tg" {
   name     = "monitoring-tg"
-  port     = 3000 
+  port     = 3000
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
 
   health_check {
-    path                = "/"  
+    path                = "/api/health"  # Використовуємо /api/health для перевірки здоров'я
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
@@ -404,25 +408,26 @@ resource "aws_lb_target_group" "monitoring_tg" {
   }
 }
 
+# Прив'язка моніторингової інстанції до Target Group
 resource "aws_lb_target_group_attachment" "monitoring_tg_attachment" {
   target_group_arn = aws_lb_target_group.monitoring_tg.arn
   target_id        = aws_instance.monitoring_instance.id 
   port             = 3000  
 }
 
-
+# Правило маршрутизації для шляху /monitoring
 resource "aws_lb_listener_rule" "monitoring_path_rule" {
   listener_arn = aws_lb_listener.http.arn  
-  priority     = 1  
+  priority     = 1  # Пріоритет для цього правила
 
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.monitoring_tg.arn
+    target_group_arn = aws_lb_target_group.monitoring_tg.arn  # Перенаправляє запити на /monitoring
   }
 
   condition {
     path_pattern {
-      values = ["/monitoring*"]  
+      values = ["/monitoring*"]  # Якщо шлях /monitoring, перенаправляє на Target Group для моніторингу
     }
   }
 
