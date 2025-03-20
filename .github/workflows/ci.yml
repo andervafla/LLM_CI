@@ -6,56 +6,56 @@ on:
       - main
 
 jobs:
-  terraform:
-    runs-on: ubuntu-latest
+  # terraform:
+  #   runs-on: ubuntu-latest
 
-    steps:
-      # Крок 1: Checkout репозиторію
-      - name: Checkout repo
-        uses: actions/checkout@v2
+  #   steps:
+  #     # Крок 1: Checkout репозиторію
+  #     - name: Checkout repo
+  #       uses: actions/checkout@v2
 
-      # Крок 2: Конфігурація AWS Credentials
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+  #     # Крок 2: Конфігурація AWS Credentials
+  #     - name: Configure AWS Credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: us-east-1
 
-      # Крок 3: Встановлення Terraform
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-        with:
-          terraform_version: "1.11.0"
+  #     # Крок 3: Встановлення Terraform
+  #     - name: Setup Terraform
+  #       uses: hashicorp/setup-terraform@v1
+  #       with:
+  #         terraform_version: "1.11.0"
 
-      # Крок 4: Перевірка версії Terraform
-      - name: Check Terraform version
-        run: terraform version
+  #     # Крок 4: Перевірка версії Terraform
+  #     - name: Check Terraform version
+  #       run: terraform version
 
-      # Крок 5: Ініціалізація Terraform
-      - name: Terraform init
-        run: terraform init
+  #     # Крок 5: Ініціалізація Terraform
+  #     - name: Terraform init
+  #       run: terraform init
 
-      # Крок 6: Планування конфігурації Terraform
-      - name: Terraform plan
-        env:
-          TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
-          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-        run: terraform plan -input=false
+  #     # Крок 6: Планування конфігурації Terraform
+  #     - name: Terraform plan
+  #       env:
+  #         TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+  #         TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+  #       run: terraform plan -input=false
 
-      # Крок 7: Застосування конфігурації Terraform
-      - name: Apply Terraform configuration
-        env:
-          TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
-          TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
-        run: terraform apply -auto-approve
+  #     # Крок 7: Застосування конфігурації Terraform
+  #     - name: Apply Terraform configuration
+  #       env:
+  #         TF_VAR_db_username: ${{ secrets.DB_USERNAME }}
+  #         TF_VAR_db_password: ${{ secrets.DB_PASSWORD }}
+  #       run: terraform apply -auto-approve
 
-      # Крок 8: Отримання IP адреси моніторингової машини
-      - name: Get monitoring instance IP
-        id: get_ip
-        run: |
-          echo "Monitoring IP: $(terraform output -raw monitoring_public_ip)"
-          echo "::set-output name=monitoring_ip::$(terraform output -raw monitoring_public_ip)"
+  #     # Крок 8: Отримання IP адреси моніторингової машини
+  #     - name: Get monitoring instance IP
+  #       id: get_ip
+  #       run: |
+  #         echo "Monitoring IP: $(terraform output -raw monitoring_public_ip)"
+  #         echo "::set-output name=monitoring_ip::$(terraform output -raw monitoring_public_ip)"
 
   ssm:
     needs: terraform
@@ -86,8 +86,11 @@ jobs:
           sed -i "s|<monitoring-ip>|$monitoring_ip|g" grafana-agent.sh
 
           # Завантажуємо скрипт на інстанс через SSM
+          INSTANCE_IDS=$(aws ec2 describe-instances --filters "Name=tag:aws:autoscaling:groupName,Values=${{ needs.terraform.outputs.asg_name }}" --query "Reservations[*].Instances[*].InstanceId" --output text)
+
+          # Завантаження та виконання скрипту через SSM на всіх інстансах в ASG
           aws ssm send-command \
-            --targets "Key=tag:aws:autoscaling:groupName,Values=${{ needs.terraform.outputs.asg_name }}" \
+            --instance-ids $INSTANCE_IDS \
             --document-name "AWS-RunShellScript" \
             --parameters 'commands=["bash /tmp/grafana-agent.sh"]' \
             --timeout-seconds 600
