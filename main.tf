@@ -345,7 +345,7 @@ resource "aws_security_group" "alb_sg" {
 
 resource "aws_lb_target_group" "tg" {
   name     = "main-tg"
-  port     = 80
+  port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
 
@@ -385,7 +385,7 @@ resource "aws_lb_target_group" "monit_tg" {
 
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
-  port              = "80"
+  port              = "8080"
   protocol          = "HTTP"
 
   default_action {
