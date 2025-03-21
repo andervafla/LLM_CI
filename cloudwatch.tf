@@ -90,15 +90,15 @@ resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
   alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
-resource "aws_cloudwatch_metric_alarm" "db_high_memory" {
-  alarm_name          = "[llm]-[test]-[db]-[high]-[memory]"
-  alarm_description   = "RDS Enhanced Monitoring: High memory utilization"
-  namespace           = "RDSOSMetrics"
-  metric_name         = "MemoryUtilization"
+resource "aws_cloudwatch_metric_alarm" "db_low_freeable_memory" {
+  alarm_name          = "[llm]-[test]-[db]-[low]-[freeable-memory]"
+  alarm_description   = "RDS: FreeableMemory is below threshold"
+  namespace           = "AWS/RDS"
+  metric_name         = "FreeableMemory"
   statistic           = "Average"
-  comparison_operator = "GreaterThanThreshold"
-  threshold           = 80         
-  period              = 300      
+  comparison_operator = "LessThanThreshold"
+  threshold           = 200000000    
+  period              = 300
   evaluation_periods  = 1
   dimensions = {
     DBInstanceIdentifier = aws_db_instance.rds_instance.identifier
