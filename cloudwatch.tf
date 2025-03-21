@@ -92,17 +92,18 @@ resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
 
 resource "aws_cloudwatch_metric_alarm" "db_high_memory" {
   alarm_name          = "[llm]-[test]-[db]-[high]-[memory]"
-  alarm_description   = "db high memory"
-  namespace           = "LLM/Custom"
+  alarm_description   = "RDS Enhanced Monitoring: High memory utilization"
+  namespace           = "RDSOSMetrics"
   metric_name         = "MemoryUtilization"
   statistic           = "Average"
   comparison_operator = "GreaterThanThreshold"
-  threshold           = 80
-  period              = 300
+  threshold           = 80         
+  period              = 300      
   evaluation_periods  = 1
   dimensions = {
     DBInstanceIdentifier = aws_db_instance.rds_instance.identifier
   }
   alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
+
 

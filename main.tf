@@ -521,6 +521,10 @@ resource "aws_db_instance" "rds_instance" {
   publicly_accessible = false
   vpc_security_group_ids = [aws_security_group.rds_sg.id]
   db_subnet_group_name  = aws_db_subnet_group.rds_subnet_group.name
+
+  monitoring_interval = 60
+  monitoring_role_arn = aws_iam_role.rds_monitoring_role.arn
+
    tags = {
     Name = "RDS Instance"
   }
