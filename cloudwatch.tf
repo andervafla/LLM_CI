@@ -69,7 +69,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_storage" {
   period              = 300
   evaluation_periods  = 1
   dimensions = {
-    DBInstanceIdentifier = aws_db_instance.rds_instance.id
+    DBInstanceIdentifier = aws_db_instance.rds_instance.identifier
   }
   alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
@@ -85,7 +85,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
   period              = 300
   evaluation_periods  = 1
   dimensions = {
-    DBInstanceIdentifier = aws_db_instance.rds_instance.id
+    DBInstanceIdentifier = aws_db_instance.rds_instance.identifier
   }
   alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
@@ -101,7 +101,8 @@ resource "aws_cloudwatch_metric_alarm" "db_high_memory" {
   period              = 300
   evaluation_periods  = 1
   dimensions = {
-    DBInstanceIdentifier = aws_db_instance.rds_instance.id
+    DBInstanceIdentifier = aws_db_instance.rds_instance.identifier
   }
   alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
+

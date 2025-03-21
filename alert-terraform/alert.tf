@@ -268,7 +268,7 @@ rule {
     }
     datasource_uid = data.grafana_data_source.existing.uid
     model = jsonencode({
-      expr         = "100 * (1 - (node_filesystem_free_bytes{instance=\"ip-10-0-3-172\", job=\"integrations/unix\", device=\"/dev/root\"} / node_filesystem_size_bytes{instance=\"ip-10-0-3-172\", job=\"integrations/unix\", device=\"/dev/root\"}))",
+      expr         = "100 * (1 - (node_filesystem_free_bytes{job=\"integrations/unix\", device=\"/dev/root\"} / node_filesystem_size_bytes{job=\"integrations/unix\", device=\"/dev/root\"}))",
       intervalMs    = 1000,
       maxDataPoints = 43200,
       refId         = "A"
@@ -318,7 +318,7 @@ rule {
     }
     datasource_uid = data.grafana_data_source.existing.uid
     model = jsonencode({
-      expr         = "100 * (1 - (node_filesystem_free_bytes{instance=\"ip-10-0-3-172\", job=\"integrations/unix\", device=\"/dev/root\"} / node_filesystem_size_bytes{instance=\"ip-10-0-3-172\", job=\"integrations/unix\", device=\"/dev/root\"}))",
+      expr         = "100 * (1 - (node_filesystem_free_bytes{job=\"integrations/unix\", device=\"/dev/root\"} / node_filesystem_size_bytes{job=\"integrations/unix\", device=\"/dev/root\"}))",
       intervalMs    = 1000,
       maxDataPoints = 43200,
       refId         = "A"
