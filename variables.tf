@@ -33,4 +33,14 @@ variable "db_password" {
   sensitive = true
 }
 
+variable "db_allocated_storage" {
+  type        = number
+  default     = 20
+  description = "DB size"
+}
 
+variable "volume_size" {
+  type        = number
+  default     = 30
+  description = "volume size"
+}

@@ -254,12 +254,6 @@ resource "aws_security_group" "monitoring_sg" {
     cidr_blocks = ["0.0.0.0/0"]  
   }
 
-  egress {
-    from_port   = 9100
-    to_port     = 9100
-    protocol    = "tcp"
-    security_groups = [aws_security_group.private_sg.id] 
-  }
   ingress {
     from_port   = 22
     to_port     = 22
@@ -320,7 +314,6 @@ resource "aws_lb" "main" {
   }
 }
 
-# Security Group для ALB
 resource "aws_security_group" "alb_sg" {
   vpc_id = aws_vpc.main.id
 
@@ -445,7 +438,7 @@ resource "aws_launch_template" "launch_template" {
   block_device_mappings {
     device_name = "/dev/sda1"
     ebs {
-      volume_size = 30 
+      volume_size = var.volume_size
       volume_type = "gp3"
       delete_on_termination = true
     }
@@ -502,7 +495,7 @@ resource "aws_security_group" "rds_sg" {
 }
 
 resource "aws_db_instance" "rds_instance" {
-  allocated_storage = 20
+  allocated_storage = var.db_allocated_storage
   engine = "postgres"
   engine_version = "15"
   instance_class = "db.t3.micro"

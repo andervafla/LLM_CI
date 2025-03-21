@@ -5,61 +5,62 @@ resource "aws_sns_topic" "alerts_topic" {
 resource "aws_sns_topic_subscription" "email_subscription" {
   topic_arn = aws_sns_topic.alerts_topic.arn
   protocol  = "email"
-  endpoint  = "andervafla@gmail.com"  # Ваш email
+  endpoint  = "andervafla@gmail.com" 
 }
 
-
-resource "aws_cloudwatch_metric_alarm" "elb_high_host_count" {
-  alarm_name          = "[llm]-[test]-[elb]-[high]-[host-count]"
-  alarm_description   = "Алерт, коли кількість здорових хостів у ELB перевищує поріг"
-  namespace           = "AWS/ELB"
-  metric_name         = "HealthyHostCount"
+resource "aws_cloudwatch_metric_alarm" "alb_unhealthy_host_count" {
+  alarm_name          = "[llm]-[test]-[alb]-[high]-[unhealthy-host-count]"
+  alarm_description   = "unhealthy-host-count"
+  namespace           = "AWS/ApplicationELB"
+  metric_name         = "UnHealthyHostCount"
   statistic           = "Average"
   comparison_operator = "GreaterThanThreshold"
-  threshold           = 5
+  threshold           = 0
   period              = 300
   evaluation_periods  = 1
   dimensions = {
-    LoadBalancerName = aws_lb.main.name
+    LoadBalancer = aws_lb.main.arn_suffix
+    TargetGroup  = aws_lb_target_group.tg.arn_suffix
   }
   alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
-resource "aws_cloudwatch_metric_alarm" "elb_medium_4xx_errors" {
-  alarm_name          = "[llm]-[test]-[elb]-[medium]-[4XX-errors]"
-  alarm_description   = "Алерт, коли кількість 4XX помилок у ELB перевищує середній поріг"
-  namespace           = "AWS/ELB"
-  metric_name         = "HTTPCode_ELB_4XX"
+
+resource "aws_cloudwatch_metric_alarm" "alb_4xx_errors" {
+  alarm_name          = "[llm]-[test]-[alb]-[medium]-[4XX-errors]"
+  alarm_description   = "4xx errors"
+  namespace           = "AWS/ApplicationELB"
+  metric_name         = "HTTPCode_ELB_4XX_Count"
   statistic           = "Sum"
   comparison_operator = "GreaterThanThreshold"
   threshold           = 50
   period              = 300
   evaluation_periods  = 1
   dimensions = {
-    LoadBalancerName = aws_lb.main.name
+    LoadBalancer = aws_lb.main.arn_suffix
   }
   alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
-resource "aws_cloudwatch_metric_alarm" "elb_medium_5xx_errors" {
-  alarm_name          = "[llm]-[test]-[elb]-[medium]-[5XX-errors]"
-  alarm_description   = "Алерт, коли кількість 5XX помилок у ELB перевищує середній поріг"
-  namespace           = "AWS/ELB"
-  metric_name         = "HTTPCode_ELB_5XX"
+resource "aws_cloudwatch_metric_alarm" "alb_5xx_errors" {
+  alarm_name          = "[llm]-[test]-[alb]-[medium]-[5XX-errors]"
+  alarm_description   = "5xx errors"
+  namespace           = "AWS/ApplicationELB"
+  metric_name         = "HTTPCode_ELB_5XX_Count"
   statistic           = "Sum"
   comparison_operator = "GreaterThanThreshold"
   threshold           = 10
   period              = 300
   evaluation_periods  = 1
   dimensions = {
-    LoadBalancerName = aws_lb.main.name
+    LoadBalancer = aws_lb.main.arn_suffix
   }
   alarm_actions = [aws_sns_topic.alerts_topic.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "db_high_storage" {
   alarm_name          = "[llm]-[test]-[db]-[high]-[storage]"
-  alarm_description   = "Алерт, коли в БД недостатньо вільного місця (високе використання сховища)"
+  alarm_description   = "db high storage"
   namespace           = "AWS/RDS"
   metric_name         = "FreeStorageSpace"
   statistic           = "Average"
@@ -75,7 +76,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_storage" {
 
 resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
   alarm_name          = "[llm]-[test]-[db]-[high]-[cpu]"
-  alarm_description   = "Алерт, коли CPU в БД завантажене (high CPU)"
+  alarm_description   = "db high CPU"
   namespace           = "AWS/RDS"
   metric_name         = "CPUUtilization"
   statistic           = "Average"
@@ -91,7 +92,7 @@ resource "aws_cloudwatch_metric_alarm" "db_high_cpu" {
 
 resource "aws_cloudwatch_metric_alarm" "db_high_memory" {
   alarm_name          = "[llm]-[test]-[db]-[high]-[memory]"
-  alarm_description   = "Алерт, коли використання пам'яті в БД є високим (кастомна метрика)"
+  alarm_description   = "db high memory"
   namespace           = "LLM/Custom"
   metric_name         = "MemoryUtilization"
   statistic           = "Average"
