@@ -523,7 +523,7 @@ resource "aws_db_instance" "rds_instance" {
   db_subnet_group_name  = aws_db_subnet_group.rds_subnet_group.name
 
    tags = {
-    Name = "RDS Instance"
+    "Name" = "RDS Instance"
   }
 }
 
